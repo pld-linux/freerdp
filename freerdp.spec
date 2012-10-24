@@ -8,12 +8,10 @@ URL:		http://www.freerdp.com/
 Source0:	https://github.com/downloads/FreeRDP/FreeRDP/%{name}-%{version}.tar.gz
 # https://github.com/FreeRDP/FreeRDP/commit/165d39a290a109c0af16a1d223d1426cb524a844 backport
 Patch0:		fastpath_send_input_pdu-sec_bytes.patch
-BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+Patch1:		c10866db66c0d462ea7c2c38bb01740bcfb4fcb4.patch
 BuildRequires:	cmake
 BuildRequires:	cups-devel
 BuildRequires:	desktop-file-utils
-BuildRequires:	libXcursor-devel
-BuildRequires:	libXdamage-devel
 BuildRequires:	libXv-devel
 BuildRequires:	libxkbfile-devel
 BuildRequires:	openssl-devel
@@ -21,12 +19,14 @@ BuildRequires:	pcsc-lite-devel
 BuildRequires:	pulseaudio-devel
 BuildRequires:	xmlto
 BuildRequires:	xorg-lib-libX11-devel
+BuildRequires:	xorg-lib-libXcursor-devel
+BuildRequires:	xorg-lib-libXdamage-devel
 BuildRequires:	xorg-lib-libXext-devel
 BuildRequires:	xorg-lib-libXinerama-devel
-
-Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
-Requires:	%{name}-plugins%{?_isa} = %{version}-%{release}
+Requires:	%{name}-libs = %{version}-%{release}
+Requires:	%{name}-plugins = %{version}-%{release}
 Provides:	xfreerdp = %{version}-%{release}
+BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 The xfreerdp Remote Desktop Protocol (RDP) client from the FreeRDP
@@ -35,8 +35,10 @@ project.
 xfreerdp can connect to RDP servers such as Microsoft Windows
 machines, xrdp and VirtualBox.
 
-
 %package        libs
+Summary:	Core libraries implementing the RDP protocol
+Group:		Applications/Communications
+
 %description    libs
 libfreerdp-core can be embedded in applications.
 
@@ -45,34 +47,29 @@ applications together with libfreerdp-core.
 
 libfreerdp-core can be extended with plugins handling RDP channels.
 
-
 %package        plugins
+Summary:	Plugins for handling the standard RDP channels
+Group:		Applications/Communications
+Requires:	%{name}-libs = %{version}-%{release}
+
 %description    plugins
 A set of plugins to the channel manager implementing the standard
 virtual channels extending RDP core functionality. For instance,
 sounds, clipboard sync, disk/printer redirection, etc.
 
-
 %package        devel
-Summary:	Core libraries implementing the RDP protocol
 Summary:	Development files for %{name}
-Summary:	Plugins for handling the standard RDP channels
-Group:		Applications/Communications
-Group:		Applications/Communications
 Group:		Development/Libraries
-Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
-Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
-Requires:	pkgconfig
+Requires:	%{name}-libs = %{version}-%{release}
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}-libs.
 
-
 %prep
-
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 cat << EOF > xfreerdp.desktop
 [Desktop Entry]
@@ -86,56 +83,50 @@ Terminal=false
 Categories=Network;RemoteAccess;
 EOF
 
-
 %build
-
+install -d build
+cd build
 %cmake \
-		-DWITH_CUPS=ON \
-		-DWITH_PCSC=ON \
-		-DWITH_PULSEAUDIO=ON \
-		-DWITH_X11=ON \
-		-DWITH_XCURSOR=ON \
-		-DWITH_XEXT=ON \
-		-DWITH_XINERAMA=ON \
-		-DWITH_XKBFILE=ON \
-		-DWITH_XV=ON \
-		-DWITH_ALSA=OFF \
-		-DWITH_CUNIT=OFF \
-		-DWITH_DIRECTFB=OFF \
-		-DWITH_FFMPEG=OFF \
-		-DWITH_SSE2=OFF \
-		-DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
-		.
+	-DWITH_CUPS=ON \
+	-DWITH_PCSC=ON \
+	-DWITH_PULSEAUDIO=ON \
+	-DWITH_X11=ON \
+	-DWITH_XCURSOR=ON \
+	-DWITH_XEXT=ON \
+	-DWITH_XINERAMA=ON \
+	-DWITH_XKBFILE=ON \
+	-DWITH_XV=ON \
+	-DWITH_ALSA=OFF \
+	-DWITH_CUNIT=OFF \
+	-DWITH_DIRECTFB=OFF \
+	-DWITH_FFMPEG=OFF \
+	-DWITH_SSE2=OFF \
+	-DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
+	..
 
-%{__make} %{?_smp_mflags}
-
+%{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-
-%{__make} install DESTDIR=$RPM_BUILD_ROOT INSTALL='install -p'
+%{__make} install \
+	INSTALL="install -p" \
+	DESTDIR=$RPM_BUILD_ROOT
 
 # No need for keymap files when using xkbfile
-rm -rf $RPM_BUILD_ROOT%{_datadir}/freerdp
+%{__rm} -r $RPM_BUILD_ROOT%{_datadir}/freerdp
 
 desktop-file-install --dir=$RPM_BUILD_ROOT%{_desktopdir} xfreerdp.desktop
 install -p -D resources/FreeRDP_Icon_256px.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
-
 %clean
 rm -rf $RPM_BUILD_ROOT
-
 
 %post
 # This is no gtk application, but try to integrate nicely with GNOME if it is available
 gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
-
-%post libs -p /sbin/ldconfig
-
-
-%postun libs -p /sbin/ldconfig
-
+%post	libs -p /sbin/ldconfig
+%postun	libs -p /sbin/ldconfig
 
 %files
 %defattr(644,root,root,755)
