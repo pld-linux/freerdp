@@ -6,14 +6,9 @@ License:	ASL 2.0
 Group:		Applications/Communications
 URL:		http://www.freerdp.com/
 Source0:	https://github.com/downloads/FreeRDP/FreeRDP/%{name}-%{version}.tar.gz
-# https://github.com/FreeRDP/FreeRDP/commit/165d39a290a109c0af16a1d223d1426cb524a844 backport
-Patch0:		fastpath_send_input_pdu-sec_bytes.patch
-Patch1:		c10866db66c0d462ea7c2c38bb01740bcfb4fcb4.patch
 BuildRequires:	cmake
 BuildRequires:	cups-devel
 BuildRequires:	desktop-file-utils
-BuildRequires:	libXv-devel
-BuildRequires:	libxkbfile-devel
 BuildRequires:	openssl-devel
 BuildRequires:	pcsc-lite-devel
 BuildRequires:	pulseaudio-devel
@@ -23,6 +18,8 @@ BuildRequires:	xorg-lib-libXcursor-devel
 BuildRequires:	xorg-lib-libXdamage-devel
 BuildRequires:	xorg-lib-libXext-devel
 BuildRequires:	xorg-lib-libXinerama-devel
+BuildRequires:	xorg-lib-libXv-devel
+BuildRequires:	xorg-lib-libxkbfile
 Requires:	%{name}-libs = %{version}-%{release}
 Requires:	%{name}-plugins = %{version}-%{release}
 Provides:	xfreerdp = %{version}-%{release}
@@ -68,8 +65,6 @@ developing applications that use %{name}-libs.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 cat << EOF > xfreerdp.desktop
 [Desktop Entry]
