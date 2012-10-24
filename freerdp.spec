@@ -1,3 +1,7 @@
+# Conditional build:
+#
+%bcond_with	pcsc		# SmartCard support via PCSC-lite library
+
 Summary:	Remote Desktop Protocol client
 Name:		freerdp
 Version:	1.0.1
@@ -10,7 +14,7 @@ BuildRequires:	cmake
 BuildRequires:	cups-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	openssl-devel
-BuildRequires:	pcsc-lite-devel
+%{?with_pcsc:BuildRequires:	pcsc-lite-devel}
 BuildRequires:	pulseaudio-devel
 BuildRequires:	xmlto
 BuildRequires:	xorg-lib-libX11-devel
@@ -32,7 +36,7 @@ project.
 xfreerdp can connect to RDP servers such as Microsoft Windows
 machines, xrdp and VirtualBox.
 
-%package        libs
+%package libs
 Summary:	Core libraries implementing the RDP protocol
 Group:		Applications/Communications
 
@@ -44,7 +48,7 @@ applications together with libfreerdp-core.
 
 libfreerdp-core can be extended with plugins handling RDP channels.
 
-%package        plugins
+%package plugins
 Summary:	Plugins for handling the standard RDP channels
 Group:		Applications/Communications
 Requires:	%{name}-libs = %{version}-%{release}
@@ -54,7 +58,7 @@ A set of plugins to the channel manager implementing the standard
 virtual channels extending RDP core functionality. For instance,
 sounds, clipboard sync, disk/printer redirection, etc.
 
-%package        devel
+%package devel
 Summary:	Development files for %{name}
 Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
@@ -83,7 +87,7 @@ install -d build
 cd build
 %cmake \
 	-DWITH_CUPS=ON \
-	-DWITH_PCSC=ON \
+	%{?with_pcsc:-DWITH_PCSC=ON} \
 	-DWITH_PULSEAUDIO=ON \
 	-DWITH_X11=ON \
 	-DWITH_XCURSOR=ON \
@@ -103,7 +107,7 @@ cd build
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__make} install \
+%{__make} -C build install \
 	INSTALL="install -p" \
 	DESTDIR=$RPM_BUILD_ROOT
 
