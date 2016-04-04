@@ -16,12 +16,13 @@ Summary:	Remote Desktop Protocol client
 Summary(pl.UTF-8):	Klient protokołu RDP
 Name:		freerdp
 Version:	1.0.2
-Release:	5
+Release:	6
 License:	Apache v2.0
 Group:		Applications/Communications
 Source0:	http://pub.freerdp.com/releases/%{name}-%{version}.tar.gz
 # Source0-md5:	08f0e07d8d77e142f7dc39e4033a458d
 Patch0:		%{name}-ffmpeg.patch
+Patch1:		ffmpeg3.patch
 URL:		http://www.freerdp.com/
 %{?with_directfb:BuildRequires:	DirectFB-devel}
 %{?with_alsa:BuildRequires:	alsa-lib-devel}
@@ -187,6 +188,7 @@ Wtyczki PulseAudio do obsługi dźwięku RDP.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 cat << EOF > xfreerdp.desktop
 [Desktop Entry]
