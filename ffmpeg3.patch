@@ -1,0 +1,96 @@
+diff -ur freerdp-1.0.2/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c freerdp-1.0.2.ffmpeg/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c
+--- freerdp-1.0.2/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c	2016-04-04 21:17:22.515023232 +0900
++++ freerdp-1.0.2.ffmpeg/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c	2016-04-04 21:16:59.521188035 +0900
+@@ -193,28 +193,28 @@
+ 	switch (media_type->SubType)
+ 	{
+ 		case TSMF_SUB_TYPE_WVC1:
+-			mdecoder->codec_id = CODEC_ID_VC1;
++			mdecoder->codec_id = AV_CODEC_ID_VC1;
+ 			break;
+ 		case TSMF_SUB_TYPE_WMA2:
+-			mdecoder->codec_id = CODEC_ID_WMAV2;
++			mdecoder->codec_id = AV_CODEC_ID_WMAV2;
+ 			break;
+ 		case TSMF_SUB_TYPE_WMA9:
+-			mdecoder->codec_id = CODEC_ID_WMAPRO;
++			mdecoder->codec_id = AV_CODEC_ID_WMAPRO;
+ 			break;
+ 		case TSMF_SUB_TYPE_MP3:
+-			mdecoder->codec_id = CODEC_ID_MP3;
++			mdecoder->codec_id = AV_CODEC_ID_MP3;
+ 			break;
+ 		case TSMF_SUB_TYPE_MP2A:
+-			mdecoder->codec_id = CODEC_ID_MP2;
++			mdecoder->codec_id = AV_CODEC_ID_MP2;
+ 			break;
+ 		case TSMF_SUB_TYPE_MP2V:
+-			mdecoder->codec_id = CODEC_ID_MPEG2VIDEO;
++			mdecoder->codec_id = AV_CODEC_ID_MPEG2VIDEO;
+ 			break;
+ 		case TSMF_SUB_TYPE_WMV3:
+-			mdecoder->codec_id = CODEC_ID_WMV3;
++			mdecoder->codec_id = AV_CODEC_ID_WMV3;
+ 			break;
+ 		case TSMF_SUB_TYPE_AAC:
+-			mdecoder->codec_id = CODEC_ID_AAC;
++			mdecoder->codec_id = AV_CODEC_ID_AAC;
+ 			/* For AAC the pFormat is a HEAACWAVEINFO struct, and the codec data
+ 			   is at the end of it. See
+ 			   http://msdn.microsoft.com/en-us/library/dd757806.aspx */
+@@ -226,10 +226,10 @@
+ 			break;
+ 		case TSMF_SUB_TYPE_H264:
+ 		case TSMF_SUB_TYPE_AVC1:
+-			mdecoder->codec_id = CODEC_ID_H264;
++			mdecoder->codec_id = AV_CODEC_ID_H264;
+ 			break;
+ 		case TSMF_SUB_TYPE_AC3:
+-			mdecoder->codec_id = CODEC_ID_AC3;
++			mdecoder->codec_id = AV_CODEC_ID_AC3;
+ 			break;
+ 		default:
+ 			return false;
+@@ -351,19 +351,29 @@
+ 			}
+ 			dst += mdecoder->decoded_size;
+ 		}
++		
+ 		frame_size = mdecoder->decoded_size_max - mdecoder->decoded_size;
+ #if LIBAVCODEC_VERSION_MAJOR < 52 || (LIBAVCODEC_VERSION_MAJOR == 52 && LIBAVCODEC_VERSION_MINOR <= 20)
+ 		len = avcodec_decode_audio2(mdecoder->codec_context,
+-			(int16_t*) dst, &frame_size,
+-			src, src_size);
++			(int16_t*) dst, &frame_size, src, src_size);
+ #else
+ 		{
++            AVFrame* decoded_frame = avcodec_alloc_frame();
++			int got_frame = 0;
+ 			AVPacket pkt;
+ 			av_init_packet(&pkt);
+ 			pkt.data = (uint8*) src;
+ 			pkt.size = src_size;
+-			len = avcodec_decode_audio3(mdecoder->codec_context,
+-				(int16_t*) dst, &frame_size, &pkt);
++			len = avcodec_decode_audio4(mdecoder->codec_context, decoded_frame, &got_frame, &pkt);
++			
++			if (len >= 0 && got_frame)
++			{
++	            frame_size = av_samples_get_buffer_size(NULL, mdecoder->codec_context->channels,
++					decoded_frame->nb_samples, mdecoder->codec_context->sample_fmt, 1);
++				memcpy(dst, decoded_frame->data[0], frame_size);
++			}
++			
++			av_free(decoded_frame);
+ 		}
+ #endif
+ 		if (len <= 0 || frame_size <= 0)
+@@ -435,7 +445,7 @@
+ 
+ 	switch (mdecoder->codec_context->pix_fmt)
+ 	{
+-		case PIX_FMT_YUV420P:
++		case AV_PIX_FMT_YUV420P:
+ 			return RDP_PIXFMT_I420;
+ 
+ 		default:
