@@ -1,3 +1,4 @@
+# NOTE: for freerdp 2.0 snapshots see freerdp2.spec
 #
 # Conditional build:
 %bcond_without	alsa		# ALSA sound support
