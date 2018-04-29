@@ -1,0 +1,13 @@
+--- freerdp-1.0.2/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c~	2018-04-29 09:45:20.000000000 +0200
++++ freerdp-1.0.2/channels/drdynvc/tsmf/ffmpeg/tsmf_ffmpeg.c	2018-04-29 09:46:56.321113085 +0200
+@@ -154,8 +154,8 @@
+ 		}
+ 	}
+ 
+-	if (mdecoder->codec->capabilities & CODEC_CAP_TRUNCATED)
+-		mdecoder->codec_context->flags |= CODEC_FLAG_TRUNCATED;
++	if (mdecoder->codec->capabilities & AV_CODEC_CAP_TRUNCATED)
++		mdecoder->codec_context->flags |= AV_CODEC_FLAG_TRUNCATED;
+ 
+ 	return true;
+ }
