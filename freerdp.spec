@@ -1,4 +1,4 @@
-# NOTE: for freerdp 2.0 snapshots see freerdp2.spec
+# NOTE: for freerdp 2.x see freerdp2.spec
 #
 # Conditional build:
 %bcond_without	alsa		# ALSA sound support
@@ -25,6 +25,7 @@ Source0:	http://pub.freerdp.com/releases/%{name}-%{version}.tar.gz
 Patch0:		%{name}-ffmpeg.patch
 Patch1:		ffmpeg3.patch
 Patch2:		ffmpeg4.patch
+Patch3:		%{name}-openssl.patch
 URL:		http://www.freerdp.com/
 %{?with_directfb:BuildRequires:	DirectFB-devel}
 %{?with_alsa:BuildRequires:	alsa-lib-devel}
@@ -80,7 +81,7 @@ DirectFB based Remote Desktop Protocol klient.
 dfreerdp can connect to RDP servers such as Microsoft Windows
 machines, xrdp and VirtualBox.
 
-%description -l pl.UTF-8
+%description dfb -l pl.UTF-8
 Klient protokołu RDP oparty na DirectFB.
 
 dfreerdp może łączyć się z serwerami RDP, takimi jak maszyny z
@@ -192,6 +193,7 @@ Wtyczki PulseAudio do obsługi dźwięku RDP.
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 cat << EOF > xfreerdp.desktop
 [Desktop Entry]
